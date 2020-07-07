@@ -29,43 +29,40 @@ func TestParserLoc(t *testing.T) {
 		WantErr bool
 	}
 
-
-
-	test1 := func()Tests {
+	test1 := func() Tests {
 		tea := Tests{}
 		local, _ := time.LoadLocation(LocationFormat)
-		tt,err := AtTime("09:01:33",local)
+		tt, err := AtTime("09:01:33", local)
 		if err != nil {
 			panic(err)
 		}
-		*tt = tt.AddDate(0,0,7)
+		*tt = tt.AddDate(0, 0, 7)
 		tea.Name = "解析周时间"
 		tea.Args = args{
-			DateFmt: fmt.Sprintf("Week %d 09:01:33",time.Now().Weekday()),
+			DateFmt: fmt.Sprintf("Week %d 09:01:33", time.Now().Weekday()),
 			Loc:     local,
 		}
 		tea.Want = tt
-		tea.WantErr =false
+		tea.WantErr = false
 		return tea
 	}
 
-	test2 := func()Tests {
+	test2 := func() Tests {
 		tea := Tests{}
 		local, _ := time.LoadLocation(LocationFormat)
-		tt,err := AtTime("15:15:33",local)
+		tt, err := AtTime("15:15:33", local)
 		if err != nil {
 			panic(err)
 		}
 		tea.Name = "解析周时间"
 		tea.Args = args{
-			DateFmt: fmt.Sprintf("Week %d 15:15:33",time.Now().Weekday()),
+			DateFmt: fmt.Sprintf("Week %d 15:15:33", time.Now().Weekday()),
 			Loc:     local,
 		}
 		tea.Want = tt
-		tea.WantErr =false
+		tea.WantErr = false
 		return tea
 	}
-
 
 	tests := []Tests{
 		test1(),

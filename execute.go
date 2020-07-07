@@ -38,12 +38,14 @@ type grapeCallFunc struct {
 }
 
 type GrapeTimer struct {
-	Id        int64  `json:"TimerId"`
-	NextTime  int64  `json:"nextUnix"`
-	RunMode   int    `json:"Mode"`
-	TimeData  string `json:"timeData"`
-	LoopCount int32  `json:"loopCount"` // -1为无限执行
-
+	Id        int64  `json:"id"`
+	NextTime  int64  `json:"next_time"`
+	RunMode   int    `json:"run_mode"`
+	TimeData  string `json:"time_data"`
+	LoopCount int32  `json:"loop_count"` // -1为无限执行
+	//控制任务执行区间,如果为空则忽略区间
+	StartTime  *time.Time `json:"start_time"`
+	EndTime    *time.Time `json:"end_time"`
 	cbFunc     *grapeCallFunc
 	tickSecond int // 临时使用 不可保存
 	nextVTime  time.Time
@@ -212,6 +214,14 @@ func (c *GrapeTimer) Execute() {
 
 /// 是否到时间
 func (c *GrapeTimer) IsExpired() bool {
+
+	if c.StartTime != nil && c.EndTime != nil {
+		n := time.Now().Unix()
+		if n < c.StartTime.Unix() || n > c.EndTime.Unix() {
+			return true
+		}
+	}
+
 	if time.Now().Unix() >= c.NextTime {
 		if CDebugMode {
 			log.Printf("[grapeTimer] Timer Expired:%v |time:%v|", c.Id, time.Now())
