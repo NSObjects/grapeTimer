@@ -125,6 +125,10 @@ func ParserLoc(dateFmt string, loc *time.Location) (*time.Time, error) {
 			weekDiff += 7
 		}
 
+		if weekDiff == 0 && vtime.Unix() < cnowTime.Unix() {
+			weekDiff += 7
+		}
+
 		if cnowTime.After(*vtime) || weekDiff != 0 {
 			*vtime = (*vtime).AddDate(0, 0, weekDiff)
 		}
