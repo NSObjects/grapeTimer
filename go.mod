@@ -1,3 +1,3 @@
-module github.com/nsobjects/grapeTimer
+module  github.com/NSObjects/grapeTimer
 
 go 1.14
