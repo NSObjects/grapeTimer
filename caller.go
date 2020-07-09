@@ -10,7 +10,7 @@ import (
 
 // 以下函数均为自动ID
 // 间隔为毫秒 运行一个tick并返回一个Id
-func NewTickerOnce(tick int, fn GrapeExecFn, startAt time.Time, endAt time.Time, args ...interface{}) int64 {
+func NewTickerOnce(tick int, startAt time.Time, endAt time.Time, fn GrapeExecFn, args ...interface{}) int64 {
 	return NewTickerLoop(tick, LoopOnce, startAt, endAt, fn, args...)
 }
 
@@ -49,11 +49,11 @@ func NewTickerLoop(tick, count int, startAt time.Time, endAt time.Time, fn Grape
 }
 
 // 格式分析时钟
-func NewTimeDataOnce(data string, fn GrapeExecFn, startAt time.Time, endAt time.Time, args ...interface{}) int64 {
-	return NewTimeDataLoop(data, LoopOnce, fn, startAt, endAt, args...)
+func NewTimeDataOnce(data string, startAt time.Time, endAt time.Time, fn GrapeExecFn, args ...interface{}) int64 {
+	return NewTimeDataLoop(data, LoopOnce, startAt, endAt, fn, args...)
 }
 
-func NewTimeDataLoop(data string, count int, fn GrapeExecFn, startAt time.Time, endAt time.Time, args ...interface{}) int64 {
+func NewTimeDataLoop(data string, count int, startAt time.Time, endAt time.Time, fn GrapeExecFn, args ...interface{}) int64 {
 	nowId := createGuid()
 	newTimer := newTimer(nowId,
 		timerDateMode,

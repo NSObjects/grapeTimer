@@ -194,13 +194,13 @@ func (c *GrapeTimer) Execute() {
 	}
 	n := time.Now().Unix()
 
-	if c.StartTime.Unix() != 0 {
+	if c.StartTime.Unix() > 0 {
 		if n < c.StartTime.Unix() {
 			return
 		}
 	}
 
-	if c.EndTime.Unix() != 0 {
+	if c.EndTime.Unix() > 0 {
 		if n > c.EndTime.Unix() {
 			c.LoopCount = 0
 			return
