@@ -44,8 +44,8 @@ type GrapeTimer struct {
 	TimeData  string `json:"time_data"`
 	LoopCount int32  `json:"loop_count"` // -1为无限执行
 	//控制任务执行区间,如果为空则忽略区间
-	StartTime  *time.Time `json:"start_time"`
-	EndTime    *time.Time `json:"end_time"`
+	StartTime  time.Time `json:"start_time"`
+	EndTime    time.Time `json:"end_time"`
 	cbFunc     *grapeCallFunc
 	tickSecond int // 临时使用 不可保存
 	nextVTime  time.Time
@@ -136,7 +136,7 @@ func callFunc(timer *grapeCallFunc) {
 }
 
 /// 直接创建一个timer 内部函数
-func newTimer(Id int64, Mode, Count int, timeData string, fn GrapeExecFn, args ...interface{}) *GrapeTimer {
+func newTimer(Id int64, Mode, Count int, timeData string, fn GrapeExecFn, startAt time.Time, endAt time.Time, args ...interface{}) *GrapeTimer {
 
 	cbo, err := reflectFunc(fn, args...)
 	if err != nil {
@@ -151,8 +151,9 @@ func newTimer(Id int64, Mode, Count int, timeData string, fn GrapeExecFn, args .
 		LoopCount:  int32(Count),
 		NextTime:   0,
 		tickSecond: 0,
-
-		cbFunc: cbo,
+		StartTime:  startAt,
+		EndTime:    endAt,
+		cbFunc:     cbo,
 	}
 
 	newValue.makeNextTime()
@@ -191,7 +192,20 @@ func (c *GrapeTimer) Execute() {
 	if c.IsDestroy() {
 		return // 销毁中的不可执行
 	}
+	n := time.Now().Unix()
 
+	if c.StartTime.Unix() != 0 {
+		if n < c.StartTime.Unix() {
+			return
+		}
+	}
+
+	if c.EndTime.Unix() != 0 {
+		if n > c.EndTime.Unix() {
+			c.LoopCount = 0
+			return
+		}
+	}
 	if c.IsExpired() {
 		if CDebugMode {
 			log.Printf("[grapeTimer] Timer Execute:%v |time:%v| Begin", c.Id, time.Now())
@@ -214,13 +228,6 @@ func (c *GrapeTimer) Execute() {
 
 /// 是否到时间
 func (c *GrapeTimer) IsExpired() bool {
-
-	if c.StartTime != nil && c.EndTime != nil {
-		n := time.Now().Unix()
-		if n < c.StartTime.Unix() || n > c.EndTime.Unix() {
-			return true
-		}
-	}
 
 	if time.Now().Unix() >= c.NextTime {
 		if CDebugMode {
@@ -253,7 +260,7 @@ func (c *GrapeTimer) makeNextTime() {
 
 	switch c.RunMode {
 	case timerDateMode:
-		vtime, err := Parser(c.TimeData)
+		vtime, err := ParserStartAt(c.StartTime, c.TimeData)
 		if err != nil {
 			atomic.StoreInt32(&c.LoopCount, 0) // 出错销毁
 			log.Printf("[grapeTimer] Timer Id:%v |time:%v|Error:%v|", c.Id, time.Now(), err)
