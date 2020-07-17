@@ -41,7 +41,7 @@ func Test_CallReflect(t *testing.T) {
 
 func Test_JsonSave(t *testing.T) {
 	InitGrapeScheduler(2*time.Second, false)
-	Id := NewTickerOnce(1000, CallBackOnce, "this arg1", 2000, float32(300.5))
+	Id := NewTickerOnce(1000, CallBackOnce, time.Time{}, time.Time{}, "this arg1", 2000, float32(300.5))
 	Json := ToJson(Id)
 
 	if len(Json) == 0 {
@@ -57,7 +57,7 @@ func Test_JsonSave(t *testing.T) {
 
 func Test_JsonSaveAll(t *testing.T) {
 	InitGrapeScheduler(2*time.Second, false)
-	NewTickerOnce(1000, CallBackOnce, "this arg1", 2000, float32(300.5))
+	NewTickerOnce(1000, CallBackOnce, time.Now(), time.Time{}, "this arg1", 2000, float32(300.5))
 	Json := SaveAll()
 
 	if len(Json) == 0 {
@@ -76,7 +76,7 @@ func Test_CreateGUIDFnc(t *testing.T) {
 	})
 
 	nextId := autoId + 1
-	eqNextId := NewTickerLoop(1000, -1, func() {
+	eqNextId := NewTickerLoop(1000, -1, time.Now(), time.Now(), func() {
 		fmt.Println("ticker 1 sec")
 	})
 
@@ -88,7 +88,7 @@ func Test_CreateGUIDFnc(t *testing.T) {
 
 	SetGuidSeed(nextId)
 	nextId = PeekNextId()
-	eqNextId = NewTickerLoop(1000, -1, func() {
+	eqNextId = NewTickerLoop(1000, -1, time.Time{}, time.Time{}, func() {
 		fmt.Println("ticker 1 sec")
 	})
 	if nextId != eqNextId {

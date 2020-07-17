@@ -3,12 +3,15 @@
 /// 负责分析并解析字符串格式并转换成一个time
 package grapeTimer
 
-import "strconv"
+import (
+	"strconv"
+	"time"
+)
 
 // 以下函数均为自动ID
 // 间隔为毫秒 运行一个tick并返回一个Id
-func NewTickerOnce(tick int, fn GrapeExecFn, args ...interface{}) int64 {
-	return NewTickerLoop(tick, LoopOnce, fn, args...)
+func NewTickerOnce(tick int, startAt time.Time, endAt time.Time, fn GrapeExecFn, args ...interface{}) int64 {
+	return NewTickerLoop(tick, LoopOnce, startAt, endAt, fn, args...)
 }
 
 // 通过json构造timer
@@ -27,13 +30,14 @@ func NewFromJson(json string, fn GrapeExecFn, args ...interface{}) int64 {
 }
 
 // 循环可控版本
-func NewTickerLoop(tick, count int, fn GrapeExecFn, args ...interface{}) int64 {
+func NewTickerLoop(tick, count int, startAt time.Time, endAt time.Time, fn GrapeExecFn, args ...interface{}) int64 {
 	nowId := createGuid()
+
 	newTimer := newTimer(nowId,
 		timerTickMode,
 		count,
 		strconv.FormatInt(int64(tick), 10),
-		fn, args...)
+		fn, startAt, endAt, args...)
 
 	//GScheduler.appendTimer <- newTimer
 
@@ -45,17 +49,17 @@ func NewTickerLoop(tick, count int, fn GrapeExecFn, args ...interface{}) int64 {
 }
 
 // 格式分析时钟
-func NewTimeDataOnce(data string, fn GrapeExecFn, args ...interface{}) int64 {
-	return NewTimeDataLoop(data, LoopOnce, fn, args...)
+func NewTimeDataOnce(data string, startAt time.Time, endAt time.Time, fn GrapeExecFn, args ...interface{}) int64 {
+	return NewTimeDataLoop(data, LoopOnce, startAt, endAt, fn, args...)
 }
 
-func NewTimeDataLoop(data string, count int, fn GrapeExecFn, args ...interface{}) int64 {
+func NewTimeDataLoop(data string, count int, startAt time.Time, endAt time.Time, fn GrapeExecFn, args ...interface{}) int64 {
 	nowId := createGuid()
 	newTimer := newTimer(nowId,
 		timerDateMode,
 		count,
 		data,
-		fn, args...)
+		fn, startAt, endAt, args...)
 
 	GScheduler.listLocker.Lock()
 	GScheduler.timerContiner.PushBack(newTimer)

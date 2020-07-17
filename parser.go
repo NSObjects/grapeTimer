@@ -64,8 +64,8 @@ func getMonthDay(year int, month int) (days int) {
 	return
 }
 
-func AtTime(timeFmt string, loc *time.Location) (*time.Time, error) {
-	nextTimeStr := fmt.Sprintf("%v %v", time.Now().Format(DateFormat), timeFmt)
+func AtTime(timeFmt string, startAt time.Time, loc *time.Location) (*time.Time, error) {
+	nextTimeStr := fmt.Sprintf("%v %v", startAt.Format(DateFormat), timeFmt)
 	vtime, perror := time.ParseInLocation(TimeFormat, nextTimeStr, loc)
 	if perror != nil {
 		return nil, perror
@@ -80,13 +80,22 @@ func AtTime(timeFmt string, loc *time.Location) (*time.Time, error) {
 func Parser(dateFmt string) (*time.Time, error) {
 	// 默认使用上海时区
 	loc, _ := time.LoadLocation(LocationFormat)
-	return ParserLoc(dateFmt, loc)
+	return ParserLoc(dateFmt, time.Now(), loc)
+}
+
+func ParserStartAt(startAt time.Time, dateFmt string) (*time.Time, error) {
+	loc, _ := time.LoadLocation(LocationFormat)
+	return ParserLoc(dateFmt, startAt, loc)
 }
 
 //// 带有时区的分析体系
-func ParserLoc(dateFmt string, loc *time.Location) (*time.Time, error) {
+func ParserLoc(dateFmt string, startAt time.Time, loc *time.Location) (*time.Time, error) {
 	dayst := strings.Split(dateFmt, " ") // 把字符串切分开
+
 	cnowTime := time.Now()
+	if startAt.After(cnowTime) {
+		cnowTime = startAt
+	}
 
 	if loc == nil {
 		return nil, errors.New(error_badLocation)
@@ -94,7 +103,7 @@ func ParserLoc(dateFmt string, loc *time.Location) (*time.Time, error) {
 
 	// 处理每日的日期格式
 	if DayCRegexp.MatchString(dateFmt) {
-		vtime, perror := AtTime(dayst[1], loc)
+		vtime, perror := AtTime(dayst[1], cnowTime, loc)
 		if perror != nil {
 			return nil, perror
 		}
@@ -115,17 +124,13 @@ func ParserLoc(dateFmt string, loc *time.Location) (*time.Time, error) {
 		}
 
 		nowWeekId := int(cnowTime.Weekday())
-		vtime, perror := AtTime(dayst[2], loc)
+		vtime, perror := AtTime(dayst[2], cnowTime, loc)
 		if perror != nil {
 			return nil, perror
 		}
 
 		weekDiff := weekId - nowWeekId
 		if weekDiff < 0 {
-			weekDiff += 7
-		}
-
-		if weekDiff == 0 && vtime.Unix() < cnowTime.Unix() {
 			weekDiff += 7
 		}
 
@@ -148,7 +153,7 @@ func ParserLoc(dateFmt string, loc *time.Location) (*time.Time, error) {
 			return nil, errors.New(error_monthDay)
 		}
 
-		nextTimer := fmt.Sprintf("%v-%02d-%02d %v", int(cnowTime.Year()), int(cnowTime.Month()), dayNum, dayst[2])
+		nextTimer := fmt.Sprintf("%v-%02d-%02d %v", cnowTime.Year(), int(cnowTime.Month()), dayNum, dayst[2])
 		vtime, perror := time.ParseInLocation(TimeFormat, nextTimer, loc)
 		if perror != nil {
 			return nil, perror
